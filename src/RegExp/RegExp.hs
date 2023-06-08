@@ -59,6 +59,8 @@ import Data.Semiring (Semiring(..))
 import Test.QuickCheck as QuickCheck
 import Test.SmallCheck.Series as SmallCheck
 
+import Data.Hashable
+
 
 -- | Sets of characters from an alphabet 'c'.
 type CharacterClass c =
@@ -184,6 +186,21 @@ data RegExpView c r where
 
 deriving instance Functor (RegExpView c)
 
+instance (Bounded c, Enum c, Eq c, Ord c) => Eq (RegExpView c (RegExp c)) where
+    One         == One         = True
+    Plus  a1 a2 == Plus  b1 b2 = view a1 == view b1 && view a2 == view b2
+    Times a1 a2 == Times b1 b2 = view a1 == view b1 && view a2 == view b2
+    Star a      == Star b      = a == b
+    Literal a   == Literal b   = a == b
+    _           == _           = False
+
+instance (Bounded c, Enum c, Ord c, Hashable c) => Hashable (RegExpView c (RegExp c)) where
+    hashWithSalt s r = case r of
+        One         -> s `hashWithSalt` (0 :: Int)
+        Plus  r1 r2 -> s `hashWithSalt` (1 :: Int) `hashWithSalt` view r1 `hashWithSalt` view r2
+        Times r1 r2 -> s `hashWithSalt` (2 :: Int) `hashWithSalt` view r1 `hashWithSalt` view r2
+        Star r      -> s `hashWithSalt` (3 :: Int) `hashWithSalt` view r
+        Literal cc  -> s `hashWithSalt` (4 :: Int) `hashWithSalt` cc
 
 
 -- | Expose the abstract type 'RegExp' as a 'RegExpView'.

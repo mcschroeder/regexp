@@ -41,6 +41,7 @@ library
                          mtl,
                          containers,
                          equivalence,
+                         hashable,
                          -- semiring-num,
                          singletons,
                          singletons-base,

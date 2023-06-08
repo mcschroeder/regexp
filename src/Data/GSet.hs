@@ -30,6 +30,8 @@ import Data.Semiring (Semiring(..), DetectableZero(..))
 import Test.QuickCheck as QuickCheck
 import Test.SmallCheck.Series as SmallCheck
 
+import Data.Hashable
+
 
 -- | A generic interface for sets over a type @a@.
 class (BooleanAlgebra (Set a), DetectableZero (Set a), Ord (Set a)) => GSet a where
@@ -114,6 +116,10 @@ data FiniteSet a
     -- | Set containing the complement of the given elements.
     | ComplementOf (Data.Set.Set a)
 
+
+instance (Bounded a, Enum a, Ord a, Hashable a) => Hashable (FiniteSet a) where
+    hashWithSalt s (These xs) = s `hashWithSalt` (0 :: Int) `hashWithSalt` xs
+    hashWithSalt s (ComplementOf xs) = s `hashWithSalt` (1 :: Int) `hashWithSalt` xs
 
 -- | Equality of finite and cofinite subsets of a finite type is decidable.
 instance (Bounded a, Enum a, Ord a) => Eq (FiniteSet a) where
