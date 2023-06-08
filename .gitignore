@@ -1,6 +1,7 @@
 # Haskell
 cabal.config
 .stack-work
+dist-newstyle/
 
 # JetBrains
 .idea

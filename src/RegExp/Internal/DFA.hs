@@ -26,8 +26,9 @@ import Control.Exception.Base(assert)
 
 import Data.Finite
 import Data.Singletons
-import Data.Singletons.Prelude
-import Data.Singletons.TypeLits
+import GHC.TypeLits.Singletons
+import GHC.TypeNats (Nat)
+import Prelude.Singletons
 
 import Data.List (intercalate)
 import qualified Data.Set
@@ -132,7 +133,7 @@ product f (Dfa (d1 :: DfaSize n c)) (Dfa (d2 :: DfaSize m c)) =
     where
         -- | State in the product automata that corresponds to the given
         -- pair of states.
-        state :: Finite n -> Finite m -> Finite (n * m)
+        --state :: Finite n -> Finite m -> Finite (n * m)
         state i j =
            combineProduct (i, j)
 
@@ -164,7 +165,7 @@ intersection (Dfa (d1 :: DfaSize n c)) (Dfa (d2 :: DfaSize m c)) =
     where
         -- | State in the product automata that corresponds to the given
         -- pair of states.
-        state :: Finite n -> Finite m -> Finite (n * m)
+        --state :: Finite n -> Finite m -> Finite (n * m)
         state i j =
            combineProduct (i, j)
 
