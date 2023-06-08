@@ -10,6 +10,7 @@
 -- supporting finite and cofinite subsets of a type.
 module Data.GSet
     ( GSet (..)
+    , FiniteSet (..)
     ) where
 
 import Prelude hiding (and, or)
