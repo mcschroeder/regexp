@@ -42,9 +42,8 @@ import Data.Ord (comparing)
 import Data.Finite
 import Data.Singletons
 import Data.Singletons.Decide
-import GHC.TypeLits.Singletons
-import GHC.TypeNats (Nat)
-import Prelude.Singletons
+import GHC.TypeNats
+import Unsafe.Coerce
 
 import Data.Semiring (Semiring(..), DetectableZero(..))
 import Data.KleeneAlgebra
@@ -155,6 +154,11 @@ transpose m =
             Vector.vector [(i, Vector.map (Vector.! i) (rows m)) | i <- finites]
     }
 
+(%+) :: SNat s -> SNat t -> SNat (s + t)
+(%+) a b = withSomeSNat (fromSNat a + fromSNat b) unsafeCoerce
+
+sDiv :: SNat s -> SNat t -> SNat (Div s t)
+sDiv a b = withSomeSNat (fromSNat a `div` fromSNat b) unsafeCoerce
 
 -- | Split a square matrix into four quadrants.
 split :: forall s t a. (DetectableZero a, KnownNat s, KnownNat t)
@@ -165,7 +169,7 @@ split :: forall s t a. (DetectableZero a, KnownNat s, KnownNat t)
          , SparseMatrix t t a
          )
 split m =
-    withKnownNat ((sing :: SNat s) %+ (sing :: SNat t)) $
+    withKnownNat ((natSing :: SNat s) %+ (natSing :: SNat t)) $
         let
             (top, bottom) =
                 Vector.split (rows m)
@@ -193,7 +197,7 @@ combine :: forall s t a. (DetectableZero a, KnownNat s, KnownNat t)
            )
         -> SparseMatrix (s + t) (s + t) a
 combine (a, b, c, d) =
-    withKnownNat ((sing :: SNat s) %+ (sing :: SNat t)) $
+    withKnownNat ((natSing :: SNat s) %+ (natSing :: SNat t)) $
         let
             top =
                 Vector.zipWith (Vector.++) (rows a) (rows b)
@@ -275,20 +279,20 @@ instance (DetectableZero a, KnownNat n) => DetectableZero (SparseMatrix n n a) w
 
 -- | Square matrices over Kleene algebra form a Kleene algebra.
 instance (DetectableZero a, KleeneAlgebra a, KnownNat n) => KleeneAlgebra (SparseMatrix n n a) where
-    star m | Proved Refl <- (sing :: SNat n) %~ (sing :: SNat 0) =
+    star m | Just Refl <- sameNat (Proxy :: Proxy n) (Proxy :: Proxy 0) =
         m
-    star m | Proved Refl <- (sing :: SNat n) %~ (sing :: SNat 1) =
+    star m | Just Refl <- sameNat (Proxy :: Proxy n) (Proxy :: Proxy 1) =
         matrix [((0,0), star (m ! (0, 0)))]
     star m =
         -- TODO: get rid of 'unsafeCoerce' or limit it to proving @n = small + large@.
-        withKnownNat ((sing :: SNat n) `sDiv` (sing :: SNat 2)) $
-        withKnownNat (((sing :: SNat n) %+ (sing :: SNat 1)) `sDiv` (sing :: SNat 2)) $
-        withKnownNat (((sing :: SNat n) `sDiv` (sing :: SNat 2))
+        withKnownNat ((natSing :: SNat n) `sDiv` (natSing :: SNat 2)) $
+        withKnownNat (((natSing :: SNat n) %+ (natSing :: SNat 1)) `sDiv` (natSing :: SNat 2)) $
+        withKnownNat (((natSing :: SNat n) `sDiv` (natSing :: SNat 2))
                      %+
-                     (((sing :: SNat n) %+ (sing :: SNat 1)) `sDiv` (sing :: SNat 2))
+                     (((natSing :: SNat n) %+ (natSing :: SNat 1)) `sDiv` (natSing :: SNat 2))
                      ) $
-        case (sing :: SNat n) %~ (sing :: SNat ((n `Div` 2) + ((n + 1) `Div` 2))) of
-            Proved Refl ->
+        case sameNat (natSing :: SNat n) (natSing :: SNat ((n `Div` 2) + ((n + 1) `Div` 2))) of
+            Just Refl ->
                 combine (a', b', c', d')
                 where
                     a :: SparseMatrix (n `Div` 2) (n `Div` 2) a
@@ -307,7 +311,7 @@ instance (DetectableZero a, KleeneAlgebra a, KnownNat n) => KleeneAlgebra (Spars
                     -- d' :: SparseMatrix large large a
                     d' = star (d `plus` (c `times` star a `times` b))
 
-            Disproved _->
+            Nothing ->
                 error "impossible"
 
 

@@ -7,6 +7,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# LANGUAGE NoStarIsType #-}
+
 -- | Finite state automaton represented as matrices.
 module RegExp.Internal.DFA
     ( Dfa
@@ -26,9 +28,8 @@ import Control.Exception.Base(assert)
 
 import Data.Finite
 import Data.Singletons
-import GHC.TypeLits.Singletons
-import GHC.TypeNats (Nat)
-import Prelude.Singletons
+import GHC.TypeNats
+import Unsafe.Coerce
 
 import Data.List (intercalate)
 import qualified Data.Set
@@ -95,6 +96,9 @@ assertValid r@(Dfa (d :: DfaSize n c)) =
                 [Vector.sum $ Matrix.nthRow r (transition d) | r <- finites]
 
 
+(%*) :: SNat s -> SNat t -> SNat (s * t)
+(%*) a b = withSomeSNat (fromSNat a * fromSNat b) unsafeCoerce
+
 -- | Generic product construction over two DFAs. Intersection
 -- and union of DFAs can be recovered as special cases by passing
 -- in @('<.>')@ and @('<+>')@, respectively.
@@ -104,7 +108,7 @@ product :: forall c. GSet c
         -> Dfa c
         -> Dfa c
 product f (Dfa (d1 :: DfaSize n c)) (Dfa (d2 :: DfaSize m c)) =
-    withKnownNat ((sing :: SNat n) %* (sing :: SNat m)) $
+    withKnownNat ((natSing :: SNat n) %* (natSing :: SNat m)) $
     assertValid $
     Dfa $ DfaSize {
         start =
@@ -142,7 +146,7 @@ product f (Dfa (d1 :: DfaSize n c)) (Dfa (d2 :: DfaSize m c)) =
 -- | DFA that accepts words accepted by both input DFAs.
 intersection :: forall c. GSet c => Dfa c -> Dfa c -> Dfa c
 intersection (Dfa (d1 :: DfaSize n c)) (Dfa (d2 :: DfaSize m c)) =
-    withKnownNat ((sing :: SNat n) %* (sing :: SNat m)) $
+    withKnownNat ((natSing :: SNat n) %* (natSing :: SNat m)) $
     assertValid $
     Dfa $ DfaSize {
         start =
@@ -259,9 +263,8 @@ regexp (Dfa (d :: DfaSize n c)) =
 -- | Convert a regular expression to a DFA.
 fromRegExp :: forall c. GSet c => RegExp c -> Dfa c
 fromRegExp r =
-    case toSing (fromIntegral $ Data.Set.size derivatives) of
-        SomeSing (s :: SNat n) ->
-            withKnownNat s $
+    case someNatVal (fromIntegral $ Data.Set.size derivatives) of
+        SomeNat (Proxy :: Proxy n) ->
             let
                 -- | States of the constructed DFA will be the derivatives of
                 -- the input regular expression. We assign each an index.

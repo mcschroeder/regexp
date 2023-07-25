@@ -23,6 +23,7 @@ import qualified Text.ParserCombinators.ReadP as Parser
 import Data.Function (on)
 import Data.List (intercalate)
 import qualified Data.Set
+import Data.Kind
 
 import Data.BooleanAlgebra (BooleanAlgebra(..))
 import Data.Semiring (Semiring(..), DetectableZero(..))
@@ -36,7 +37,7 @@ import Data.Hashable
 -- | A generic interface for sets over a type @a@.
 class (BooleanAlgebra (Set a), DetectableZero (Set a), Ord (Set a)) => GSet a where
     -- | Sets of elements of @a@.
-    type Set a :: *
+    type Set a :: Type
 
     -- | The set containing a single element.
     singleton :: a -> Set a

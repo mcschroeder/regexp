@@ -29,9 +29,10 @@ import Control.Exception (assert)
 
 import Data.Finite
 import Data.Singletons
-import GHC.TypeLits.Singletons
-import GHC.TypeNats (Nat)
-import Prelude.Singletons
+--import GHC.TypeLits.Singletons
+import GHC.TypeNats
+-- import GHC.TypeLits
+--import Prelude.Singletons
 
 import qualified Data.IntMap.Strict as IntMap
 import Data.Semiring (Semiring(..), DetectableZero(..))
@@ -66,7 +67,7 @@ v ! i =
 -- | Length of a vector.
 length :: forall n a r. (KnownNat n, Integral r) => SparseVector n a -> r
 length _ =
-    fromIntegral $ fromSing (sing :: SNat n)
+    fromIntegral $ natVal (Proxy :: Proxy n)
 
 
 -- | Sum of all elements in a vector.
@@ -144,7 +145,7 @@ split v =
             IntMap.mapKeysMonotonic (subtract n) v2'
 
         n =
-            fromIntegral $ fromSing (sing :: SNat n)
+            fromIntegral $ natVal (Proxy :: Proxy n)
 
 
 
@@ -184,7 +185,7 @@ instance (DetectableZero a, KnownNat n) => Semiring (SparseVector n a) where
             }
         where
             length =
-                fromIntegral $ fromSing (sing :: SNat n)
+                fromIntegral $ natVal (Proxy :: Proxy n)
 
 
     -- | Vector addition.

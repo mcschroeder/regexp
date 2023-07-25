@@ -40,9 +40,10 @@ module RegExp.RegExp
 import Control.Exception.Base(assert)
 import Unsafe.Coerce(unsafeCoerce)
 
-import Data.Singletons
 import Data.Singletons.Decide
-import Prelude.Singletons
+import Data.Singletons.Bool
+import Data.Type.Bool
+import Data.Kind
 
 import Data.Set(Set)
 import qualified Data.Set as Set
@@ -388,7 +389,7 @@ data NSeq c (isNullable :: Bool) where
 
     -- | Tack on a nullable subexpression. The result is nullable if
     -- and only if the rest of the list is.
-    NSeqConsNullable :: Sing (isNullable :: Bool)
+    NSeqConsNullable :: SBool (isNullable :: Bool)
                      -> SubSeq c True
                      -> NSeq c isNullable
                      -> NSeq c isNullable
@@ -608,7 +609,7 @@ instance GSet c => HEq (NSeq c n1) (NSeq c n2) where
     hEq NSeqNil NSeqNil =
         True
     hEq (NSeqConsNullable n1 h1 t1) (NSeqConsNullable n2 h2 t2) =
-        fromSing n1 == fromSing n2 && h1 `hEq` h2 && t1 `hEq` t2
+        fromSBool n1 == fromSBool n2 && h1 `hEq` h2 && t1 `hEq` t2
     hEq (NSeqConsStrict h1 t1) (NSeqConsStrict h2 t2) =
         h1 `hEq` h2 && t1 `hEq` t2
     hEq _ _ =
@@ -671,7 +672,7 @@ instance (GSet c, Ord (CharacterClass c)) => HOrd (NSeq c n1) (NSeq c n2) where
         GT
 
     hCompare (NSeqConsNullable n1 h1 t1) (NSeqConsNullable n2 h2 t2) =
-        fromSing n1 `compare` fromSing n2 <> h1 `hCompare` h2 <> t1 `hCompare` t2
+        fromSBool n1 `compare` fromSBool n2 <> h1 `hCompare` h2 <> t1 `hCompare` t2
     hCompare (NSeqConsNullable _ _ _) _ =
         LT
     hCompare _ (NSeqConsNullable _ _ _) =
@@ -1116,7 +1117,7 @@ instance (GSet c, Read (CharacterClass c)) => Read (RegExp c) where
 -- * Helpers
 
 -- | Existentially quantify a single boolean argument.
-data Some1 (f :: Bool -> *) where
+data Some1 (f :: Bool -> Type) where
     Some1 :: !(f b) -> Some1 f
 
 

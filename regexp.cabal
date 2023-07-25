@@ -36,7 +36,7 @@ library
   other-modules:         SparseVector
                          SparseMatrix
 
-  build-depends:         base >= 4.11,
+  build-depends:         base >= 4.18,
                          flow,
                          mtl,
                          containers,
@@ -44,7 +44,7 @@ library
                          hashable,
                          -- semiring-num,
                          singletons,
-                         singletons-base,
+                         singleton-bool,
                          finite-typelits,
                          QuickCheck,
                          smallcheck
